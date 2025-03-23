@@ -28,7 +28,7 @@ SECRET_KEY =\
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', 'https://emilioreyes1-8000.theiadockernext-1-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai']
+ALLOWED_HOSTS = ['localhost', 'https://emilioreyes1-8000.theiadockernext-1-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai', '127.0.0.1']
 CSRF_TRUSTED_ORIGINS = ['https://emilioreyes1-8000.theiadockernext-1-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai']
 
 REST_FRAMEWORK = {
@@ -61,7 +61,10 @@ ROOT_URLCONF = 'djangoproj.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'frontend/static'),  # For Home.html
+            os.path.join(BASE_DIR, 'frontend/public'),  # For index.html
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
