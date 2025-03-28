@@ -26,7 +26,6 @@ REACT_TEMPLATE = 'index.html'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('djangoapp/', include('djangoapp.urls')),
-    
     # React app URLs - catch all routes and let React router handle them
     path('', TemplateView.as_view(template_name=REACT_TEMPLATE)),
     path('dealers/', TemplateView.as_view(template_name=REACT_TEMPLATE)),
@@ -34,8 +33,10 @@ urlpatterns = [
     path('contact/', TemplateView.as_view(template_name=REACT_TEMPLATE)),
     path('login/', TemplateView.as_view(template_name=REACT_TEMPLATE)),
     path('register/', TemplateView.as_view(template_name=REACT_TEMPLATE)),
-    path('dealer/<int:dealer_id>', TemplateView.as_view(template_name=REACT_TEMPLATE)),
-    path('postreview/<int:dealer_id>', TemplateView.as_view(template_name=REACT_TEMPLATE)),
+    path('dealer/<int:dealer_id>',
+         TemplateView.as_view(template_name=REACT_TEMPLATE)),
+    path('postreview/<int:dealer_id>',
+         TemplateView.as_view(template_name=REACT_TEMPLATE)),
 ]
 
 # Add static URL patterns
@@ -56,5 +57,11 @@ urlpatterns += [
         content_type='image/png'
     )),
     # Serve static/static directory for React build files
-    path('static/static/<path:path>', lambda request, path: redirect(f'/static/{path}')),
+    # Import redirect from django.shortcuts
+    path('static/static/<path:path>',
+         # Use a shorter variable for readability
+         # Import django.shortcuts more concisely
+         # Use a shorter import approach
+         lambda request, p: __import__('django.shortcuts').shortcuts.redirect(
+             f'/static/{p}')),
 ]
