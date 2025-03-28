@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils.timezone import now
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
@@ -11,10 +10,12 @@ class CarMake(models.Model):
     country_of_origin = models.CharField(max_length=100, blank=True)
     
     class Meta:
-        ordering =['name']
+        ordering = ['name']
 
     def __str__(self):
         return self.name
+
+
 
 class CarModel(models.Model):
     # Type choices
