@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app
+  labels:
+    app: django-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: django-app
+  template:
+    metadata:
+      labels:
+        app: django-app
+    spec:
+      # Disable automounting of service account token for security
+      automountServiceAccountToken: false
+      containers:
+      - name: django-app
+        image: us.icr.io/sn-labs-emilioreyes1/django-app:v1.0.0
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+            ephemeral-storage: "1Gi"
+        env:
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: django-secrets
+              key: secret-key
+        - name: DJANGO_DEBUG
+          value: "False"
+        - name: DJANGO_ALLOWED_HOSTS
+          value: "*"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-app-service
+spec:
+  selector:
+    app: django-app
+  ports:
+  - port: 80
+    targetPort: 8000
+  type: LoadBalancer
