@@ -8,13 +8,12 @@ class CarMake(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
     country_of_origin = models.CharField(max_length=100, blank=True)
-    
+
     class Meta:
         ordering = ['name']
 
     def __str__(self):
         return self.name
-
 
 
 class CarModel(models.Model):
@@ -32,7 +31,7 @@ class CarModel(models.Model):
 
     # Model fields
     car_make = models.ForeignKey(
-        CarMake, 
+        CarMake,
         on_delete=models.CASCADE,
         related_name='models'
     )

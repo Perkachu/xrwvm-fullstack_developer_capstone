@@ -5,10 +5,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Try local backend first, if that fails, use the remote one
+
+
 def get_backend_url():
     local_url = "http://localhost:3030"
     remote_url = os.getenv('backend_url', 'http://localhost:3030')
-    
+
     try:
         response = requests.get(f"{local_url}/fetchDealers", timeout=2)
         if response.status_code == 200:
@@ -16,9 +18,10 @@ def get_backend_url():
             return local_url
     except Exception as e:
         print(f"Failed to connect to local backend: {str(e)}")
-    
+
     print(f"Using remote backend at {remote_url}")
     return remote_url
+
 
 backend_url = get_backend_url()
 sentiment_analyzer_url = os.getenv(
@@ -51,7 +54,6 @@ def get_request(endpoint, **kwargs):
         return None
 
 
-
 def analyze_review_sentiments(text):
     request_url = sentiment_analyzer_url + "analyze/" + text
     try:
@@ -61,7 +63,6 @@ def analyze_review_sentiments(text):
     except Exception as err:
         print(f"Unexpected {err=}, {type(err)=}")
         print("Network exception occurred")
-
 
 
 def post_review(data_dict):

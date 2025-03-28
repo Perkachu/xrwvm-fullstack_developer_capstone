@@ -1,5 +1,10 @@
 {
-  "esversion": 8,
+  "esversion": 11,
   "node": true,
-  "asi": true
+  "asi": true,
+  "laxcomma": true,
+  "elision": true,
+  "ignoreDelimiters": [
+    { "start": "node_modules/", "end": "**" }
+  ]
 }
