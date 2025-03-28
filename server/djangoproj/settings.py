@@ -62,6 +62,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
+            os.path.join(BASE_DIR, 'frontend/build'),  # For index.html from build
             os.path.join(BASE_DIR, 'frontend/static'),  # For Home.html
             os.path.join(BASE_DIR, 'frontend/public'),  # For index.html
         ],
@@ -137,5 +138,9 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-STATICFILES_DIRS = []
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'frontend/build'),  # React build directory
+    os.path.join(BASE_DIR, 'frontend/build/static'),  # React build static directory
+]
+
 

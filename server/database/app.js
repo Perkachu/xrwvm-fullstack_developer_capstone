@@ -8,10 +8,13 @@ const port = 3030;
 app.use(cors())
 app.use(require('body-parser').urlencoded({ extended: false }));
 
-const reviews_data = JSON.parse(fs.readFileSync("reviews.json", 'utf8'));
-const dealerships_data = JSON.parse(fs.readFileSync("dealerships.json", 'utf8'));
+const reviews_data = JSON.parse(fs.readFileSync(__dirname + "/data/reviews.json", 'utf8'));
+const dealerships_data = JSON.parse(fs.readFileSync(__dirname + "/data/dealerships.json", 'utf8'));
 
-mongoose.connect("mongodb://mongo_db:27017/",{'dbName':'dealershipsDB'});
+mongoose.connect("mongodb://localhost:27017/",{'dbName':'dealershipsDB'}).catch(err => {
+  console.log('MongoDB connection error:', err);
+  // Continue even if MongoDB connection fails
+});
 
 
 const Reviews = require('./review');
@@ -83,12 +86,45 @@ try {
 app.get('/fetchDealer/:id', async (req, res) => {
 try {
     const { id } = req.params;
-    const dealer = await Dealerships.findById(id);
+    console.log('Fetching dealer with ID:', id);
+    
+    // First try to find by numeric id field
+    let dealer;
+    try {
+        // Convert the id parameter to a number if possible
+        const numericId = parseInt(id, 10);
+        if (!isNaN(numericId)) {
+            console.log('Looking up dealer by numeric id:', numericId);
+            dealer = await Dealerships.findOne({ id: numericId });
+            if (dealer) {
+                console.log('Found dealer by numeric id:', dealer.full_name);
+            }
+        }
+    } catch (idError) {
+        console.log('Error finding by numeric id:', idError.message);
+    }
+    
+    // If no dealer found by numeric id, try ObjectId as a fallback
+    if (!dealer && mongoose.Types.ObjectId.isValid(id)) {
+        try {
+            console.log('Looking up dealer by ObjectId:', id);
+            dealer = await Dealerships.findById(id);
+            if (dealer) {
+                console.log('Found dealer by ObjectId:', dealer.full_name);
+            }
+        } catch (objIdError) {
+            console.log('Error finding by ObjectId:', objIdError.message);
+        }
+    }
+    
     if (!dealer) {
+        console.log('No dealer found with id:', id);
         return res.status(404).json({message: 'Dealer not found'});
     }
+    
     res.json(dealer);
-}   catch (error) {
+} catch (error) {
+    console.error('Error in fetchDealer route:', error);
     res.status(500).json ({ message: 'Error fetching dealer by ID', error: error.message});
 }
 });

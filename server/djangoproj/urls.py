@@ -20,9 +20,41 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 
+# Define a template name constant to avoid duplication
+REACT_TEMPLATE = 'index.html'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('djangoapp/', include('djangoapp.urls')),
-    path('', TemplateView.as_view(template_name="Home.html")),
-   path('dealers/', TemplateView.as_view(template_name="index.html")),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    
+    # React app URLs - catch all routes and let React router handle them
+    path('', TemplateView.as_view(template_name=REACT_TEMPLATE)),
+    path('dealers/', TemplateView.as_view(template_name=REACT_TEMPLATE)),
+    path('about/', TemplateView.as_view(template_name=REACT_TEMPLATE)),
+    path('contact/', TemplateView.as_view(template_name=REACT_TEMPLATE)),
+    path('login/', TemplateView.as_view(template_name=REACT_TEMPLATE)),
+    path('register/', TemplateView.as_view(template_name=REACT_TEMPLATE)),
+    path('dealer/<int:dealer_id>', TemplateView.as_view(template_name=REACT_TEMPLATE)),
+    path('postreview/<int:dealer_id>', TemplateView.as_view(template_name=REACT_TEMPLATE)),
+]
+
+# Add static URL patterns
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Serve React static files
+urlpatterns += [
+    path('manifest.json', TemplateView.as_view(
+        template_name='manifest.json',
+        content_type='application/json'
+    )),
+    path('favicon.ico', TemplateView.as_view(
+        template_name='favicon.ico',
+        content_type='image/x-icon'
+    )),
+    path('logo192.png', TemplateView.as_view(
+        template_name='logo192.png',
+        content_type='image/png'
+    )),
+    # Serve static/static directory for React build files
+    path('static/static/<path:path>', lambda request, path: redirect(f'/static/{path}')),
+]

@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from .models import CarMake, CarModel
 from .populate import initiate
+from .restapis import get_request, analyze_review_sentiments, post_review
 
 
 # Get an instance of a logger
@@ -38,8 +39,11 @@ def login_user(request):
     return JsonResponse(data)
 
 # Create a `logout_request` view to handle sign out request
-# def logout_request(request):
-# ...
+def logout_request(request):
+    # Log out the user
+    logout(request)
+    # Return a success response
+    return JsonResponse({"success": True})
 
 # Create a `registration` view to handle sign up request
 # @csrf_exempt
@@ -67,13 +71,62 @@ def get_dealerships(request, state="All"):
     else:
         endpoint = "/fetchDealers/"+state
     dealerships = get_request(endpoint)
+    if dealerships is None:
+        return JsonResponse({"status":500,"error":"Failed to fetch dealers"})
     return JsonResponse({"status":200,"dealers":dealerships})
 
 def get_dealer_details(request, dealer_id):
     if(dealer_id):
-        endpoint = "/fetchDealer/"+str(dealer_id)
-        dealership = get_request(endpoint)
-        return JsonResponse({"status":200,"dealer":dealership})
+        try:
+            # First try the direct endpoint (which might fail for numeric IDs)
+            endpoint = "/fetchDealer/"+str(dealer_id)
+            dealership = get_request(endpoint)
+            
+            # Check if the response contains an error message
+            if dealership and isinstance(dealership, dict) and 'error' in dealership:
+                # If there's an error, try to find the dealer by fetching all dealers and filtering
+                try:
+                    # Get all dealers
+                    all_dealers_endpoint = "/fetchDealers"
+                    all_dealers_response = get_request(all_dealers_endpoint)
+                    
+                    if all_dealers_response and 'dealers' in all_dealers_response:
+                        # Find the dealer with the matching ID
+                        dealer_id_int = int(dealer_id)  # Convert to integer for comparison
+                        for dealer in all_dealers_response['dealers']:
+                            if dealer.get('id') == dealer_id_int:
+                                # Found the dealer, return it
+                                return JsonResponse({"status":200,"dealer":dealer})
+                except Exception as fetch_all_error:
+                    logger.error(f"Error fetching all dealers: {str(fetch_all_error)}")
+                
+                # If we still couldn't find the dealer, return a fallback
+                return JsonResponse({
+                    "status": 404,
+                    "dealer": {
+                        "message": "Dealer not found",
+                        "id": dealer_id,
+                        "full_name": f"Dealer #{dealer_id}",
+                        "city": "",
+                        "address": ""
+                    }
+                })
+            
+            # If we got a valid response from the direct endpoint, return it
+            return JsonResponse({"status":200,"dealer":dealership})
+        except Exception as e:
+            # If there's an exception, return a fallback dealer object
+            logger.error(f"Error fetching dealer details: {str(e)}")
+            return JsonResponse({
+                "status": 500,
+                "dealer": {
+                    "message": "Error fetching dealer",
+                    "id": dealer_id,
+                    "full_name": f"Dealer #{dealer_id}",
+                    "city": "",
+                    "address": ""
+                }
+            })
     else:
         return JsonResponse({"status":400,"message":"Bad Request"})
 
@@ -82,10 +135,23 @@ def get_dealer_reviews(request, dealer_id):
     if(dealer_id):
         endpoint = "/fetchReviews/dealer/"+str(dealer_id)
         reviews = get_request(endpoint)
-        for review_detail in reviews:
-            response = analyze_review_sentiments(review_detail['review'])
-            print(response)
-            review_detail['sentiment'] = response['sentiment']
+        # Check if reviews is None or empty
+        if reviews is None:
+            reviews = []
+        elif isinstance(reviews, list) and len(reviews) > 0:
+            for review_detail in reviews:
+                try:
+                    response = analyze_review_sentiments(review_detail['review'])
+                    # Check if response is None or doesn't have sentiment key
+                    if response and 'sentiment' in response:
+                        review_detail['sentiment'] = response['sentiment']
+                    else:
+                        # Default to neutral if sentiment analysis fails
+                        review_detail['sentiment'] = 'neutral'
+                except Exception as e:
+                    print(f"Error analyzing sentiment: {str(e)}")
+                    # Default to neutral if sentiment analysis fails
+                    review_detail['sentiment'] = 'neutral'
         return JsonResponse({"status":200,"reviews":reviews})
     else:
         return JsonResponse({"status":400,"message":"Bad Request"})
