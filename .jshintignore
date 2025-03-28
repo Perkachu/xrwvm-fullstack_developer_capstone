@@ -1,0 +1,19 @@
+# Node modules
+node_modules/**
+**/node_modules/**
+server/database/node_modules/**
+server/node_modules/**
+
+# Built and vendor files
+**/vendor/**
+**/dist/**
+**/build/**
+**/static/**
+
+# Django environment
+server/djangoenv/**
+
+# Minified files
+**/*.min.js
+**/*bundle.js
+**/main.*.js
